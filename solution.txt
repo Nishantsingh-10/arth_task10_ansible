@@ -1,0 +1,58 @@
+- hosts: all
+  tasks:
+  - name: configuring yum repository for docker
+    yum_repository:
+        name: docker_repo
+        description: yum_repo
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+        gpgcheck: no
+
+  - name: installing docker
+    command: yum install docker-ce --nobest -y
+    args:
+        warn: no
+
+  - name: start docker service
+    service:
+       name: "docker"
+       state: started
+       enabled: yes
+
+  - name: installing pip
+    package:
+        name: python36
+
+  - name: installing docker python library
+    pip:
+        name: docker-py
+
+
+  - name: pulling httpd image
+    docker_image:
+       name: "httpd"
+       source: pull
+    - name: create directory to store webpages to deploy
+    file:
+      path: "/docker_with_ansible"
+      state: directory
+
+
+  - name: copy webpages to directory created above
+    copy:
+      src: "/code/new.html"
+      dest: "/docker_with_ansible"
+
+  - name: run docker container
+    docker_container:
+       name: os2
+       image: httpd
+       exposed_ports:
+       -  "80"
+       ports:
+       - "90:80"
+       volumes:
+        - /docker_with_ansible:/usr/local/apache2/htdocs/     
+       
+       
+       
+       
